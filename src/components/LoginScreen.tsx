@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { User, Lock, Eye, EyeOff } from 'lucide-react';
 
 export const LoginScreen: React.FC = () => {
-  const { login, loginWithDemoAccount } = useAuth();
+  const { login } = useAuth();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -98,14 +98,6 @@ export const LoginScreen: React.FC = () => {
               className="w-full mt-3 py-4 rounded-2xl bg-[#FF5722] hover:bg-[#F4511E] text-white font-bold text-base shadow-lg shadow-[#FF5722]/20 transition-all active:scale-[0.98] disabled:opacity-70 cursor-pointer"
             >
               {loading ? 'Signing In...' : 'Sign In'}
-            </button>
-
-            <button
-              type="button"
-              onClick={loginWithDemoAccount}
-              className="w-full mt-2.5 py-3 rounded-2xl bg-[#1C1E22] hover:bg-[#25282E] text-[#FF9800] border border-[#FF9800]/20 font-semibold text-xs tracking-wide transition-all active:scale-[0.98] cursor-pointer"
-            >
-              ⚡ Instant Demo Student Mode
             </button>
           </form>
         </div>
