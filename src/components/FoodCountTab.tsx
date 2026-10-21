@@ -160,13 +160,13 @@ export const FoodCountTab: React.FC = () => {
     } else if (mealKey === 'lunchBox') {
       nextLunchBox = !lunchBox;
       if (nextLunchBox) {
-        nextLunch = true; // Lunch Box automatically covers Lunch
+        nextLunch = false; // Mutually exclusive: if Lunch Box is selected, NO Lunch!
       }
     } else if (mealKey === 'lunch') {
-      if (lunchBox) {
-        return; // Lunch cannot be toggled when Lunch Box is marked!
-      }
       nextLunch = !lunch;
+      if (nextLunch) {
+        nextLunchBox = false; // Mutually exclusive: if Lunch is selected, NO Lunch Box!
+      }
     } else if (mealKey === 'snack') {
       nextSnack = !snack;
     } else if (mealKey === 'dinner') {
@@ -466,7 +466,7 @@ export const FoodCountTab: React.FC = () => {
         {/* 3. Lunch */}
         <div
           className={`rounded-2xl p-4 flex items-center justify-between border transition-all duration-200 ${
-            !evalLocks.canEditLunch || lunchBox
+            !evalLocks.canEditLunch
               ? 'opacity-40 bg-[#121214] border-[#1A1A1E]'
               : 'bg-[#141416] border-[#212328] hover:border-[#2F323A]'
           }`}
@@ -474,12 +474,12 @@ export const FoodCountTab: React.FC = () => {
           <div className="flex items-center space-x-3.5">
             <div
               className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 transition-colors ${
-                !evalLocks.canEditLunch || lunchBox
+                !evalLocks.canEditLunch
                   ? 'bg-[#1C1D21] text-[#60646D] border border-[#252830]'
                   : 'bg-[#FFA000]/20 text-[#FFC107] border border-[#FFA000]/40 shadow-[0_0_12px_rgba(255,160,0,0.15)] font-bold text-lg'
               }`}
             >
-              {!evalLocks.canEditLunch || lunchBox ? (
+              {!evalLocks.canEditLunch ? (
                 <Lock className="w-5 h-5 text-[#60646D]" />
               ) : (
                 'L'
@@ -488,19 +488,17 @@ export const FoodCountTab: React.FC = () => {
             <div>
               <h4
                 className={`text-base font-bold leading-tight ${
-                  !evalLocks.canEditLunch || lunchBox ? 'text-[#717682]' : 'text-white'
+                  !evalLocks.canEditLunch ? 'text-[#717682]' : 'text-white'
                 }`}
               >
                 Lunch
               </h4>
               <p
                 className={`text-xs mt-0.5 ${
-                  !evalLocks.canEditLunch || lunchBox ? 'text-[#525760]' : 'text-[#888888]'
+                  !evalLocks.canEditLunch ? 'text-[#525760]' : 'text-[#888888]'
                 }`}
               >
-                {lunchBox
-                  ? 'Covered by Lunch Box'
-                  : !evalLocks.canEditLunch
+                {!evalLocks.canEditLunch
                   ? lockStatus.lunchLocked
                     ? 'Locked by Admin'
                     : isLeave
@@ -514,26 +512,20 @@ export const FoodCountTab: React.FC = () => {
           {/* Switch Toggle */}
           <button
             type="button"
-            disabled={!evalLocks.canEditLunch || lunchBox}
-            onClick={() => {
-              if (!lunchBox && evalLocks.canEditLunch) {
-                handleToggle('lunch');
-              }
-            }}
+            disabled={!evalLocks.canEditLunch}
+            onClick={() => handleToggle('lunch')}
             className={`relative inline-flex h-7 w-12 shrink-0 rounded-full transition-colors duration-200 ease-in-out ${
-              !evalLocks.canEditLunch || lunchBox ? 'cursor-not-allowed opacity-50 bg-[#1E2024]' : 'cursor-pointer'
-            } ${(lunch || lunchBox) && !isLeave ? 'bg-[#FF5722]' : 'bg-[#2A2D33]'}`}
+              !evalLocks.canEditLunch ? 'cursor-not-allowed opacity-50 bg-[#1E2024]' : 'cursor-pointer'
+            } ${lunch && !isLeave ? 'bg-[#FF5722]' : 'bg-[#2A2D33]'}`}
           >
             <span
               className={`inline-flex items-center justify-center h-5 w-5 my-1 transform rounded-full transition duration-200 ease-in-out ${
-                (lunch || lunchBox) && !isLeave
+                lunch && !isLeave
                   ? 'translate-x-6 bg-white text-[#FF5722]'
                   : 'translate-x-1 bg-[#4A4E57] text-white'
               }`}
             >
-              {lunchBox ? (
-                <Lock className="w-3 h-3 text-[#FF5722]" />
-              ) : !evalLocks.canEditLunch ? (
+              {!evalLocks.canEditLunch ? (
                 <Lock className="w-3 h-3 text-[#3A3E47]" />
               ) : lunch ? (
                 <Check className="w-3 h-3 stroke-[3]" />

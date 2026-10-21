@@ -91,7 +91,7 @@ export function evaluateLockStatus(
 
   // Individual Meal Toggles
   const canEditBreakfast = !isMasterLocked && !isLeave && !lockStatus?.breakfastLocked;
-  const canEditLunch = !isMasterLocked && !isLeave && !lockStatus?.lunchLocked && !isLunchBox;
+  const canEditLunch = !isMasterLocked && !isLeave && !lockStatus?.lunchLocked;
   const canEditSnack = !isMasterLocked && !isLeave && !lockStatus?.snackLocked;
   const canEditDinner = !isMasterLocked && !isLeave && !lockStatus?.dinnerLocked;
   const canEditLunchBox = !isMasterLocked && !isLeave && !lockStatus?.breakfastLocked && isBreakfast;
