@@ -24,6 +24,7 @@ const STORAGE_PREFIX = 'smys_store_';
 
 function getLocalItem<T>(key: string, defaultValue: T): T {
   try {
+    if (typeof window === 'undefined') return defaultValue;
     const item = localStorage.getItem(STORAGE_PREFIX + key);
     return item ? JSON.parse(item) : defaultValue;
   } catch {
@@ -33,6 +34,7 @@ function getLocalItem<T>(key: string, defaultValue: T): T {
 
 function setLocalItem<T>(key: string, value: T): void {
   try {
+    if (typeof window === 'undefined') return;
     localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value));
   } catch (err) {
     console.error('LocalStorage write error:', err);

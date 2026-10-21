@@ -61,19 +61,52 @@ The app is fully configured for Vercel with zero extra setup needed:
 
 ---
 
-## 💻 Local Development
+## 💻 Local Development & SSR
 
 ```bash
 # Install dependencies
 npm install
 
-# Start local development server
+# 1. Standard Client Vite Dev Server (Fastest HMR)
 npm run dev
 # Running at: http://localhost:5173
 
-# Build for production
+# 2. Server-Side Rendering (SSR) Dev Server
+npm run dev:ssr
+# Running at: http://localhost:3000
+
+# 3. Production Build (Dual Target: Client + Server)
 npm run build
+
+# 4. Run Production SSR Node Server
+npm run serve
+# Running at: http://localhost:3000
 ```
+
+---
+
+## ⚡ Production Deployment with NGINX ("Engine X")
+
+### Option A: 1-Command Docker Compose (Node SSR + NGINX)
+```bash
+docker compose up --build -d
+```
+This boots both the Node.js Express SSR container and the NGINX reverse-proxy container on port `80`.
+
+### Option B: Bare-Metal Linux / VPS (Ubuntu/Debian)
+1. Build the production bundles: `npm run build`
+2. Start the SSR server via PM2: `pm2 start server.js --name smys-ssr`
+3. Copy [nginx.conf](file:///d:/SMYS_FOOD_COUNT_WEB_APP/nginx.conf) to `/etc/nginx/sites-available/smys-portal`
+4. Symlink to enabled sites and reload:
+   ```bash
+   sudo ln -s /etc/nginx/sites-available/smys-portal /etc/nginx/sites-enabled/
+   sudo nginx -t
+   sudo systemctl reload nginx
+   ```
+5. Install SSL with Let's Encrypt:
+   ```bash
+   sudo certbot --nginx -d smys.yourdomain.com
+   ```
 
 ---
 

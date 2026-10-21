@@ -15,13 +15,15 @@ export interface FirebaseConfigOptions {
 const DEFAULT_PROJECT_ID = 'smys-food-count-b378a';
 
 function getActiveConfig(): FirebaseConfigOptions {
-  // Check local storage custom config override first
-  const storedConfig = localStorage.getItem('smys_firebase_config');
-  if (storedConfig) {
+  // Check local storage custom config override first (client only)
+  if (typeof window !== 'undefined') {
     try {
-      const parsed = JSON.parse(storedConfig);
-      if (parsed.apiKey && parsed.projectId) {
-        return parsed;
+      const storedConfig = localStorage.getItem('smys_firebase_config');
+      if (storedConfig) {
+        const parsed = JSON.parse(storedConfig);
+        if (parsed.apiKey && parsed.projectId) {
+          return parsed;
+        }
       }
     } catch {
       // ignore JSON parse error
@@ -29,13 +31,14 @@ function getActiveConfig(): FirebaseConfigOptions {
   }
 
   // Fallback to Vite env variables or standard defaults
+  const envSource = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {};
   return {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || `${DEFAULT_PROJECT_ID}.firebaseapp.com`,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || DEFAULT_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || `${DEFAULT_PROJECT_ID}.appspot.com`,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-    appId: import.meta.env.VITE_FIREBASE_APP_ID || ''
+    apiKey: envSource.VITE_FIREBASE_API_KEY || '',
+    authDomain: envSource.VITE_FIREBASE_AUTH_DOMAIN || `${DEFAULT_PROJECT_ID}.firebaseapp.com`,
+    projectId: envSource.VITE_FIREBASE_PROJECT_ID || DEFAULT_PROJECT_ID,
+    storageBucket: envSource.VITE_FIREBASE_STORAGE_BUCKET || `${DEFAULT_PROJECT_ID}.appspot.com`,
+    messagingSenderId: envSource.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
+    appId: envSource.VITE_FIREBASE_APP_ID || ''
   };
 }
 
@@ -81,11 +84,15 @@ export function getFirebaseStatus(): { isConfigured: boolean; message: string; p
 }
 
 export function saveCustomFirebaseConfig(config: FirebaseConfigOptions): void {
-  localStorage.setItem('smys_firebase_config', JSON.stringify(config));
-  window.location.reload();
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('smys_firebase_config', JSON.stringify(config));
+    window.location.reload();
+  }
 }
 
 export function resetFirebaseConfig(): void {
-  localStorage.removeItem('smys_firebase_config');
-  window.location.reload();
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('smys_firebase_config');
+    window.location.reload();
+  }
 }

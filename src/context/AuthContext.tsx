@@ -17,6 +17,7 @@ interface AuthContextType {
   adminWhatsApp: string;
   setAdminWhatsApp: (num: string) => void;
   firebaseStatus: { isConfigured: boolean; message: string; projectId: string };
+  loginWithDemoAccount: () => void;
   useDemoAccount: () => void;
 }
 
@@ -28,6 +29,7 @@ const DEFAULT_ADMIN_WHATSAPP = '919876543210';
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<StudentUser | null>(() => {
     try {
+      if (typeof window === 'undefined') return null;
       const saved = localStorage.getItem('smys_store_active_user');
       return saved ? JSON.parse(saved) : null;
     } catch {
@@ -38,7 +40,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState<boolean>(true);
   const [lockStatus, setLockStatus] = useState<LockStatus>(INITIAL_LOCK_STATUS);
   const [adminWhatsApp, setAdminWhatsAppState] = useState<string>(() => {
-    return localStorage.getItem(ADMIN_WHATSAPP_STORAGE_KEY) || DEFAULT_ADMIN_WHATSAPP;
+    try {
+      if (typeof window !== 'undefined') {
+        return localStorage.getItem(ADMIN_WHATSAPP_STORAGE_KEY) || DEFAULT_ADMIN_WHATSAPP;
+      }
+    } catch {
+      // ignore
+    }
+    return DEFAULT_ADMIN_WHATSAPP;
   });
 
   const firebaseStatus = getFirebaseStatus();
@@ -46,7 +55,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const setAdminWhatsApp = (num: string) => {
     const clean = num.replace(/\D/g, '');
     setAdminWhatsAppState(clean);
-    localStorage.setItem(ADMIN_WHATSAPP_STORAGE_KEY, clean);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(ADMIN_WHATSAPP_STORAGE_KEY, clean);
+    }
   };
 
   useEffect(() => {
@@ -72,21 +83,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const useDemoAccount = () => {
+  const loginWithDemoAccount = () => {
     setUser(DEMO_STUDENT_USER);
-    localStorage.setItem('smys_store_active_user', JSON.stringify(DEMO_STUDENT_USER));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('smys_store_active_user', JSON.stringify(DEMO_STUDENT_USER));
+    }
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('smys_store_active_user');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('smys_store_active_user');
+    }
   };
 
   const updateLocalUser = (updater: (prev: StudentUser) => StudentUser) => {
     setUser((prev) => {
       if (!prev) return null;
       const updated = updater(prev);
-      localStorage.setItem('smys_store_active_user', JSON.stringify(updated));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('smys_store_active_user', JSON.stringify(updated));
+      }
       return updated;
     });
   };
@@ -103,7 +120,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         adminWhatsApp,
         setAdminWhatsApp,
         firebaseStatus,
-        useDemoAccount
+        loginWithDemoAccount,
+        useDemoAccount: loginWithDemoAccount
       }}
     >
       {children}
