@@ -1,8 +1,8 @@
 import { LockStatus } from '../types';
 
 /**
- * Rule A: The 7:40 PM (19:40) Date Switch Rule
- * Daily at 19:40 (7:40 PM), dinner count locks for today, and the app's default date
+ * Rule A: The 7:30 PM (19:30) Date Switch Rule
+ * Daily at 19:30 (7:30 PM), dinner begins, and the app's default date
  * automatically switches to Tomorrow's Date (Date.now() + 1 Day).
  * Both the Food Count Screen and Mess Menu Screen initialize with this calculated date.
  */
@@ -11,8 +11,8 @@ export function getInitialDate(): Date {
   const hours = now.getHours();
   const minutes = now.getMinutes();
 
-  // Daily at 7:40 PM (19:40), switch default target to Tomorrow
-  if (hours > 19 || (hours === 19 && minutes >= 40)) {
+  // Daily at 7:30 PM (19:30), switch default target to Tomorrow
+  if (hours > 19 || (hours === 19 && minutes >= 30)) {
     const tomorrow = new Date();
     tomorrow.setDate(now.getDate() + 1);
     return tomorrow;

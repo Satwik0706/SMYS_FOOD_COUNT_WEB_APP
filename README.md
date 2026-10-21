@@ -10,9 +10,8 @@ A mobile-first Progressive Web App (PWA) for hostel borders and students (especi
    - Multi-identifier login: **Institutional Email**, **Student Admin ID (e.g. `SMYS-2024-089`)**, or **Roll Number (e.g. `22CS104`)**.
    - One-click **Demo Student Mode** for instant exploration without waiting for database credentials.
 
-2. **Rule A: The 7:40 PM (19:40) Date Switch Rule**:
-   - At 19:40 daily, dinner count locks for today, and default date automatically advances to Tomorrow (`Date.now() + 1 Day`).
-   - Active countdown timer displayed in the top header.
+2. **Rule A: The 7:30 PM (19:30) Date Switch Rule**:
+   - At 19:30 (7:30 PM) daily, dinner service starts and the default date automatically advances to Tomorrow (`Date.now() + 1 Day`).
 
 3. **Rule B: Firestore Document Mapping & Data Model**:
    - `users/${studentId}`: Student profile, year level, roll number, and sticky meal preferences.
@@ -81,6 +80,6 @@ npm run build
 ## 📱 Mobile Architecture Preview
 
 - **Tab 1: Home View**: Welcome greeting, year chip (`3rd Year`), roll number, live filtered announcements, and quick action tiles.
-- **Tab 2: Mess Menu View**: Date navigation bar (`<` and `>`), automated 7:40 PM date switch, and 4 color-accented meal cards (Breakfast, Lunch, Snacks, Dinner).
+- **Tab 2: Mess Menu View**: Date navigation bar (`<` and `>`), automated 7:30 PM date switch, and 4 color-accented meal cards (Breakfast, Lunch, Snacks, Dinner).
 - **Tab 3: Food Count View**: Real-time Firestore meal switches, Lunch Box sub-toggle, On Leave switch, lock alert banners, and Missed Count request flow.
 - **Tab 4: Alerts View**: Filterable feed of notices (All, High Priority, Normal) and search bar.
