@@ -18,7 +18,8 @@ import {
   Check,
   Send,
   MessageCircle,
-  HelpCircle
+  HelpCircle,
+  UserX
 } from 'lucide-react';
 
 export const FoodCountTab: React.FC = () => {
@@ -79,8 +80,74 @@ export const FoodCountTab: React.FC = () => {
 
   if (!user) return null;
 
+  // Leave rule: student CANNOT press leave if any one lock EXCEPT snacks lock is ON.
+  // Student can change leave ONLY when master, breakfast, lunch, and dinner locks are all OFF.
+  const canToggleLeave =
+    !lockStatus.locked &&
+    !lockStatus.breakfastLocked &&
+    !lockStatus.lunchLocked &&
+    !lockStatus.dinnerLocked;
+
+  const handleToggleLeave = async () => {
+    if (!canToggleLeave) return;
+
+    const willBeOnLeave = !isLeave;
+    let nextBreakfast = breakfast;
+    let nextLunchBox = lunchBox;
+    let nextLunch = lunch;
+    let nextSnack = snack;
+    let nextDinner = dinner;
+
+    if (willBeOnLeave) {
+      // If student presses leave, his food count will be reset to zero:
+      nextBreakfast = false;
+      nextLunchBox = false;
+      nextLunch = false;
+      nextSnack = false;
+      nextDinner = false;
+    } else {
+      // When turning off leave, restore preferences
+      nextBreakfast = user.breakfastPref ?? false;
+      nextLunchBox = false;
+      nextLunch = user.lunchPref ?? false;
+      nextSnack = user.snackPref ?? false;
+      nextDinner = user.dinnerPref ?? true;
+    }
+
+    setIsLeave(willBeOnLeave);
+    setBreakfast(nextBreakfast);
+    setLunchBox(nextLunchBox);
+    setLunch(nextLunch);
+    setSnack(nextSnack);
+    setDinner(nextDinner);
+
+    try {
+      await saveFoodCount(user.uid, dateStr, {
+        breakfast: nextBreakfast,
+        lunch: nextLunch,
+        snack: nextSnack,
+        dinner: nextDinner,
+        lunchBox: nextLunchBox,
+        isLeave: willBeOnLeave
+      });
+
+      updateLocalUser((prev) => ({
+        ...prev,
+        breakfastPref: nextBreakfast,
+        lunchPref: nextLunch,
+        snackPref: nextSnack,
+        dinnerPref: nextDinner,
+        isLeave: willBeOnLeave
+      }));
+    } catch (err) {
+      console.error('Error saving leave to database:', err);
+    }
+  };
+
   // Toggle meal and atomic sync to Firestore
   const handleToggle = async (mealKey: 'breakfast' | 'lunchBox' | 'lunch' | 'snack' | 'dinner') => {
+    if (isLeave) return; // All meals locked when on leave!
+
     let nextBreakfast = breakfast;
     let nextLunchBox = lunchBox;
     let nextLunch = lunch;
@@ -148,7 +215,16 @@ export const FoodCountTab: React.FC = () => {
       </div>
 
       {/* Alert Banner (Matching Screenshot 5) */}
-      {evalLocks.isMasterLocked ? (
+      {isLeave ? (
+        <div className="rounded-2xl bg-[#38181A] px-4 py-3.5 flex items-center space-x-3 text-white border border-[#542125]">
+          <div className="w-5 h-5 rounded-full bg-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
+            <Info className="w-3.5 h-3.5" />
+          </div>
+          <span className="text-xs font-medium leading-relaxed text-rose-200">
+            You are currently ON LEAVE. All meals are locked and food count is reset to 0.
+          </span>
+        </div>
+      ) : evalLocks.isMasterLocked ? (
         <div className="rounded-2xl bg-[#2D2A35] px-4 py-3.5 flex items-center space-x-3 text-white border border-[#3E384A]">
           <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-white shrink-0">
             <Info className="w-3.5 h-3.5" />
@@ -180,6 +256,54 @@ export const FoodCountTab: React.FC = () => {
 
       {/* Schedule Items List (Matching Screenshot 5) */}
       <div className="space-y-3">
+        {/* On Leave Row */}
+        <div className="rounded-2xl bg-[#141416] p-4 flex items-center justify-between border border-[#212328]">
+          <div className="flex items-center space-x-3.5">
+            <div
+              className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${
+                isLeave ? 'bg-[#3E1A1B] text-[#FF5252]' : 'bg-[#282B32] text-[#888888]'
+              }`}
+            >
+              <UserX className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-base font-bold text-white leading-tight">
+                On Leave
+              </h4>
+              <p className="text-xs text-[#888888] mt-0.5">
+                {isLeave
+                  ? 'Marked away (food count reset to zero)'
+                  : !canToggleLeave
+                  ? 'Locked by Admin (meal locks are active)'
+                  : 'Toggle to mark away & reset meal count'}
+              </p>
+            </div>
+          </div>
+
+          {/* Switch Toggle */}
+          <button
+            type="button"
+            disabled={!canToggleLeave}
+            onClick={handleToggleLeave}
+            className={`relative inline-flex h-7 w-12 shrink-0 rounded-full transition-colors duration-200 ease-in-out ${
+              !canToggleLeave ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+            } ${isLeave ? 'bg-[#FF5252]' : 'bg-[#2A2D33]'}`}
+          >
+            <span
+              className={`inline-flex items-center justify-center h-5 w-5 my-1 transform rounded-full transition duration-200 ease-in-out ${
+                isLeave
+                  ? 'translate-x-6 bg-white text-[#FF5252]'
+                  : 'translate-x-1 bg-[#4A4E57] text-white'
+              }`}
+            >
+              {!canToggleLeave ? (
+                <Lock className="w-3 h-3 text-[#2A2D33]" />
+              ) : isLeave ? (
+                <Check className="w-3 h-3 stroke-[3]" />
+              ) : null}
+            </span>
+          </button>
+        </div>
         {/* 1. Breakfast */}
         <div className="rounded-2xl bg-[#141416] p-4 flex items-center justify-between border border-[#212328]">
           <div className="flex items-center space-x-3.5">

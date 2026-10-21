@@ -329,7 +329,7 @@ function parseMealItems(raw: any, defaultTiming: string) {
  * - menu/${weekday}
  * Fallback to weekly schedule if not posted in Firestore
  */
-export async function getDailyMenu(dateStr: string, dateObj: Date): Promise<DailyMenu> {
+export async function getDailyMenu(dateStr: string, dateObj: Date): Promise<DailyMenu | null> {
   const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
   const dayKey = dayName.toLowerCase();
 
@@ -368,9 +368,8 @@ export async function getDailyMenu(dateStr: string, dateObj: Date): Promise<Dail
     }
   }
 
-  // Fallback to standard weekly schedule for that day of week
-  const { getFallbackMenuForDate } = await import('../data/mockData');
-  return getFallbackMenuForDate(dateObj);
+  // If menu is not present in database on that day, return null (leave it empty)
+  return null;
 }
 
 /**

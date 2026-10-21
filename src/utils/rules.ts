@@ -97,8 +97,14 @@ export function evaluateLockStatus(
   const canEditLunchBox = !isMasterLocked && !isLeave && !lockStatus?.breakfastLocked && isBreakfast;
 
   // Availability / On Leave Toggle
-  // Students can toggle leave if master is open, no main meal is locked, and no pending request
-  const canEditLeave = !isMasterLocked && !isAnyMainMealLocked && pendingRequestStatus !== 'PENDING';
+  // Student CANNOT press leave if ANY lock except snacks is ON.
+  // Student can change leave ONLY when master, breakfast, lunch, and dinner locks are all OFF.
+  const canEditLeave =
+    !isMasterLocked &&
+    !lockStatus?.breakfastLocked &&
+    !lockStatus?.lunchLocked &&
+    !lockStatus?.dinnerLocked &&
+    pendingRequestStatus !== 'PENDING';
 
   // Request Portal Condition:
   // Appears when student is On Leave AND main meals are locked, but master lock is open

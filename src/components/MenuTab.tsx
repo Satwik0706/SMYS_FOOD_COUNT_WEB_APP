@@ -27,33 +27,32 @@ export const MenuTab: React.FC = () => {
     };
   }, [currentDate]);
 
+  const today = new Date();
+  const tomorrow = new Date();
+  tomorrow.setDate(today.getDate() + 1);
+
+  const todayKey = formatDateKey(today);
+  const tomorrowKey = formatDateKey(tomorrow);
+  const currentKey = formatDateKey(currentDate);
+
+  const isToday = currentKey === todayKey;
+  const isTomorrow = currentKey === tomorrowKey;
+
   const handlePrevDay = () => {
-    const prev = new Date(currentDate);
-    prev.setDate(prev.getDate() - 1);
-    setCurrentDate(prev);
+    // Students can only see Today and Tomorrow
+    if (!isToday) {
+      setCurrentDate(new Date(today));
+    }
   };
 
   const handleNextDay = () => {
-    const next = new Date(currentDate);
-    next.setDate(next.getDate() + 1);
-    setCurrentDate(next);
+    // Students are able to see only one day ahead of today (Tomorrow)
+    if (!isTomorrow) {
+      setCurrentDate(new Date(tomorrow));
+    }
   };
 
-  // Day label (Today, Tomorrow, or Day Name)
-  const todayKey = formatDateKey(new Date());
-  const tomorrowDate = new Date();
-  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-  const tomorrowKey = formatDateKey(tomorrowDate);
-  const currentKey = formatDateKey(currentDate);
-
-  let dateStatus = '';
-  if (currentKey === todayKey) dateStatus = 'Today';
-  else if (currentKey === tomorrowKey) dateStatus = 'Tomorrow';
-  else {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    dateStatus = days[currentDate.getDay()];
-  }
-
+  const dateStatus = isToday ? 'Today' : 'Tomorrow';
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const formattedDay = `${monthNames[currentDate.getMonth()]} ${currentDate.getDate()}`;
 
@@ -73,7 +72,10 @@ export const MenuTab: React.FC = () => {
       <div className="rounded-2xl bg-[#202024] p-3 flex items-center justify-between border border-[#2D2D32]">
         <button
           onClick={handlePrevDay}
-          className="p-2 text-white hover:text-[#FF5722] transition-colors"
+          disabled={isToday}
+          className={`p-2 transition-colors ${
+            isToday ? 'text-[#444448] cursor-not-allowed' : 'text-white hover:text-[#FF5722] cursor-pointer'
+          }`}
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
@@ -89,7 +91,10 @@ export const MenuTab: React.FC = () => {
 
         <button
           onClick={handleNextDay}
-          className="p-2 text-white hover:text-[#FF5722] transition-colors"
+          disabled={isTomorrow}
+          className={`p-2 transition-colors ${
+            isTomorrow ? 'text-[#444448] cursor-not-allowed' : 'text-white hover:text-[#FF5722] cursor-pointer'
+          }`}
         >
           <ChevronRight className="w-5 h-5" />
         </button>
