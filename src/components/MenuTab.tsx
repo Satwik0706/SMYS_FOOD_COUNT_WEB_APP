@@ -1,31 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { DailyMenu } from '../types';
 import { getDailyMenu } from '../services/firestoreService';
-import {
-  getInitialDate,
-  formatDateKey,
-  formatDisplayDate
-} from '../utils/rules';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Sun,
-  Utensils,
-  Coffee,
-  Moon,
-  Sparkles,
-  Calendar,
-  RotateCcw,
-  Clock
-} from 'lucide-react';
+import { getInitialDate, formatDateKey } from '../utils/rules';
+import { ChevronLeft, ChevronRight, Utensils, Coffee, Moon } from 'lucide-react';
 
 export const MenuTab: React.FC = () => {
-  // Rule A: Initializes with calculated 7:40 PM date
+  // Rule A: Initializes with 7:40 PM calculated date
   const [currentDate, setCurrentDate] = useState<Date>(() => getInitialDate());
   const [menu, setMenu] = useState<DailyMenu | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-
-  const initialCalculatedDate = getInitialDate();
 
   useEffect(() => {
     let isMounted = true;
@@ -56,200 +39,191 @@ export const MenuTab: React.FC = () => {
     setCurrentDate(next);
   };
 
-  const handleResetToTarget = () => {
-    setCurrentDate(initialCalculatedDate);
-  };
+  // Day label (Today, Tomorrow, or Day Name)
+  const todayKey = formatDateKey(new Date());
+  const tomorrowDate = new Date();
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+  const tomorrowKey = formatDateKey(tomorrowDate);
+  const currentKey = formatDateKey(currentDate);
 
-  const displayInfo = formatDisplayDate(currentDate);
-  const isTargetInitial = formatDateKey(currentDate) === formatDateKey(initialCalculatedDate);
+  let dateStatus = '';
+  if (currentKey === todayKey) dateStatus = 'Today';
+  else if (currentKey === tomorrowKey) dateStatus = 'Tomorrow';
+  else {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    dateStatus = days[currentDate.getDay()];
+  }
+
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const formattedDay = `${monthNames[currentDate.getMonth()]} ${currentDate.getDate()}`;
 
   return (
-    <div className="space-y-4 pb-20 pt-2">
-      {/* Day Navigation Bar */}
-      <div className="bg-white rounded-3xl p-3 shadow-xs border border-orange-100 flex items-center justify-between">
+    <div className="space-y-4 pb-24 pt-3">
+      {/* Header (Matching Screenshot 4) */}
+      <div>
+        <h2 className="text-2xl font-bold text-[#FF5722] tracking-tight">
+          Mess Menu
+        </h2>
+        <p className="text-xs text-[#888888] mt-0.5 font-normal">
+          Check out what's cooking in the mess
+        </p>
+      </div>
+
+      {/* Date Navigation Bar (Matching Screenshot 4) */}
+      <div className="rounded-2xl bg-[#202024] p-3 flex items-center justify-between border border-[#2D2D32]">
         <button
           onClick={handlePrevDay}
-          title="Previous Day"
-          className="p-2.5 rounded-2xl bg-slate-50 hover:bg-orange-50 text-slate-700 hover:text-orange-600 transition-colors"
+          className="p-2 text-white hover:text-[#FF5722] transition-colors"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
 
-        <div className="text-center px-2">
-          <div className="flex items-center justify-center space-x-1.5">
-            <Calendar className="w-3.5 h-3.5 text-orange-500" />
-            <h2 className="text-base font-bold text-slate-800 tracking-tight">
-              {displayInfo.main}
-            </h2>
-          </div>
-          <p className="text-[11px] font-medium text-slate-400 mt-0.5">
-            {displayInfo.sub}
+        <div className="text-center">
+          <p className="text-xs font-semibold text-[#FF5722] leading-none mb-1">
+            {dateStatus}
           </p>
+          <h3 className="text-base font-bold text-white tracking-tight leading-none">
+            {formattedDay}
+          </h3>
         </div>
 
         <button
           onClick={handleNextDay}
-          title="Next Day"
-          className="p-2.5 rounded-2xl bg-slate-50 hover:bg-orange-50 text-slate-700 hover:text-orange-600 transition-colors"
+          className="p-2 text-white hover:text-[#FF5722] transition-colors"
         >
           <ChevronRight className="w-5 h-5" />
         </button>
       </div>
 
-      {/* Auto 7:40 PM Switch Notice & Reset Button */}
-      <div className="flex items-center justify-between px-2 text-xs text-slate-500">
-        <span className="flex items-center space-x-1">
-          <Clock className="w-3.5 h-3.5 text-orange-500" />
-          <span>7:40 PM Rule: Switches to Tomorrow automatically</span>
-        </span>
-
-        {!isTargetInitial && (
-          <button
-            onClick={handleResetToTarget}
-            className="flex items-center space-x-1 text-orange-600 hover:text-orange-700 font-semibold text-[11px] bg-orange-50 px-2 py-0.5 rounded-lg border border-orange-100"
-          >
-            <RotateCcw className="w-3 h-3" />
-            <span>Target Day</span>
-          </button>
-        )}
-      </div>
-
       {loading || !menu ? (
-        <div className="p-12 text-center text-slate-400 text-xs">
-          Loading daily mess menu...
+        <div className="py-20 text-center text-[#777777] text-xs">
+          Loading mess menu...
         </div>
       ) : (
-        <div className="space-y-3.5">
-          {/* 1. Breakfast Card (Orange border / accent) */}
-          <div className="bg-white rounded-3xl p-5 border-l-4 border-l-[#FF9800] border border-orange-100/70 shadow-xs relative overflow-hidden">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center space-x-2.5">
-                <div className="w-9 h-9 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center shadow-xs">
-                  <Sun className="w-5 h-5" />
+        <div className="space-y-4">
+          {/* 1. Breakfast Card (Matching Screenshot 4) */}
+          <div className="rounded-3xl overflow-hidden border border-[#1F2C35] shadow-lg">
+            {/* Header Bar */}
+            <div className="bg-[#0C3549] px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#00A8FF] text-white flex items-center justify-center font-bold shadow-xs">
+                  {/* Croissant / Breakfast glyph */}
+                  <span className="text-lg">🥐</span>
                 </div>
-                <div>
-                  <h3 className="font-bold text-slate-800 text-sm">Breakfast</h3>
-                  <p className="text-[11px] font-semibold text-orange-600 flex items-center space-x-1">
-                    <span>{menu.breakfast.timing || '7:30 AM - 9:00 AM'}</span>
-                  </p>
-                </div>
+                <h4 className="text-lg font-bold text-white tracking-tight">
+                  Breakfast
+                </h4>
               </div>
 
-              {menu.breakfast.special && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200 flex items-center space-x-1">
-                  <Sparkles className="w-3 h-3 text-orange-500" />
-                  <span>{menu.breakfast.special}</span>
-                </span>
-              )}
+              <div className="px-3 py-1 rounded-xl bg-[#08222F] border border-[#13445C] text-[#29B6F6] text-xs font-semibold">
+                {menu.breakfast.timing || '7:30 am to 11:00 am'}
+              </div>
             </div>
 
-            <ul className="space-y-1.5 pl-1 text-xs text-slate-700">
-              {menu.breakfast.items.map((item, idx) => (
-                <li key={idx} className="flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-orange-400"></span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
+            {/* Content Body */}
+            <div className="bg-[#18181A] px-5 py-4">
+              <ul className="space-y-1.5 text-base font-medium text-white">
+                {menu.breakfast.items.map((item, idx) => (
+                  <li key={idx} className="flex items-center space-x-2.5">
+                    <span className="text-[#00A8FF] text-xl leading-none">•</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
-          {/* 2. Lunch Card (Green border / accent) */}
-          <div className="bg-white rounded-3xl p-5 border-l-4 border-l-[#4CAF50] border border-emerald-100/70 shadow-xs relative overflow-hidden">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center space-x-2.5">
-                <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-xs">
-                  <Utensils className="w-5 h-5" />
+          {/* 2. Lunch Card (Matching Screenshot 4) */}
+          <div className="rounded-3xl overflow-hidden border border-[#3E3516] shadow-lg">
+            {/* Header Bar */}
+            <div className="bg-[#3B3410] px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#FFC107] text-slate-900 flex items-center justify-center font-bold shadow-xs">
+                  <Utensils className="w-5 h-5 text-slate-900" />
                 </div>
-                <div>
-                  <h3 className="font-bold text-slate-800 text-sm">Lunch</h3>
-                  <p className="text-[11px] font-semibold text-emerald-600 flex items-center space-x-1">
-                    <span>{menu.lunch.timing || '12:30 PM - 2:00 PM'}</span>
-                  </p>
-                </div>
+                <h4 className="text-lg font-bold text-white tracking-tight">
+                  Lunch
+                </h4>
               </div>
 
-              {menu.lunch.special && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center space-x-1">
-                  <Sparkles className="w-3 h-3 text-emerald-500" />
-                  <span>{menu.lunch.special}</span>
-                </span>
-              )}
+              <div className="px-3 py-1 rounded-xl bg-[#26210A] border border-[#4F4616] text-[#FFD54F] text-xs font-semibold">
+                {menu.lunch.timing || '12:30 to 2:30 pm'}
+              </div>
             </div>
 
-            <ul className="space-y-1.5 pl-1 text-xs text-slate-700">
-              {menu.lunch.items.map((item, idx) => (
-                <li key={idx} className="flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
+            {/* Content Body */}
+            <div className="bg-[#18181A] px-5 py-4">
+              <ul className="space-y-1.5 text-base font-medium text-white">
+                {menu.lunch.items.map((item, idx) => (
+                  <li key={idx} className="flex items-center space-x-2.5">
+                    <span className="text-[#FFC107] text-xl leading-none">•</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
-          {/* 3. Snacks Card (Purple border / accent) */}
-          <div className="bg-white rounded-3xl p-5 border-l-4 border-l-[#9C27B0] border border-purple-100/70 shadow-xs relative overflow-hidden">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center space-x-2.5">
-                <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center shadow-xs">
-                  <Coffee className="w-5 h-5" />
+          {/* 3. Snacks Card */}
+          <div className="rounded-3xl overflow-hidden border border-[#351E3D] shadow-lg">
+            {/* Header Bar */}
+            <div className="bg-[#331C3B] px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#BA68C8] text-white flex items-center justify-center font-bold shadow-xs">
+                  <Coffee className="w-5 h-5 text-white" />
                 </div>
-                <div>
-                  <h3 className="font-bold text-slate-800 text-sm">Snacks & Refreshment</h3>
-                  <p className="text-[11px] font-semibold text-purple-600 flex items-center space-x-1">
-                    <span>{menu.snack.timing || '5:00 PM - 6:00 PM'}</span>
-                  </p>
-                </div>
+                <h4 className="text-lg font-bold text-white tracking-tight">
+                  Snacks
+                </h4>
               </div>
 
-              {menu.snack.special && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 flex items-center space-x-1">
-                  <Sparkles className="w-3 h-3 text-purple-500" />
-                  <span>{menu.snack.special}</span>
-                </span>
-              )}
+              <div className="px-3 py-1 rounded-xl bg-[#211126] border border-[#4A2554] text-[#CE93D8] text-xs font-semibold">
+                {menu.snack.timing || '5:00 to 6:00 pm'}
+              </div>
             </div>
 
-            <ul className="space-y-1.5 pl-1 text-xs text-slate-700">
-              {menu.snack.items.map((item, idx) => (
-                <li key={idx} className="flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
+            {/* Content Body */}
+            <div className="bg-[#18181A] px-5 py-4">
+              <ul className="space-y-1.5 text-base font-medium text-white">
+                {menu.snack.items.map((item, idx) => (
+                  <li key={idx} className="flex items-center space-x-2.5">
+                    <span className="text-[#BA68C8] text-xl leading-none">•</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
-          {/* 4. Dinner Card (Blue border / accent) */}
-          <div className="bg-white rounded-3xl p-5 border-l-4 border-l-[#2196F3] border border-blue-100/70 shadow-xs relative overflow-hidden">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center space-x-2.5">
-                <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shadow-xs">
-                  <Moon className="w-5 h-5" />
+          {/* 4. Dinner Card */}
+          <div className="rounded-3xl overflow-hidden border border-[#2B2338] shadow-lg">
+            {/* Header Bar */}
+            <div className="bg-[#241F3B] px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#7986CB] text-white flex items-center justify-center font-bold shadow-xs">
+                  <Moon className="w-5 h-5 text-white" />
                 </div>
-                <div>
-                  <h3 className="font-bold text-slate-800 text-sm">Dinner</h3>
-                  <p className="text-[11px] font-semibold text-blue-600 flex items-center space-x-1">
-                    <span>{menu.dinner.timing || '7:30 PM - 9:00 PM'}</span>
-                  </p>
-                </div>
+                <h4 className="text-lg font-bold text-white tracking-tight">
+                  Dinner
+                </h4>
               </div>
 
-              {menu.dinner.special && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 flex items-center space-x-1">
-                  <Sparkles className="w-3 h-3 text-blue-500" />
-                  <span>{menu.dinner.special}</span>
-                </span>
-              )}
+              <div className="px-3 py-1 rounded-xl bg-[#171426] border border-[#362E54] text-[#9FA8DA] text-xs font-semibold">
+                {menu.dinner.timing || '7:30 to 9:30 pm'}
+              </div>
             </div>
 
-            <ul className="space-y-1.5 pl-1 text-xs text-slate-700">
-              {menu.dinner.items.map((item, idx) => (
-                <li key={idx} className="flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
+            {/* Content Body */}
+            <div className="bg-[#18181A] px-5 py-4">
+              <ul className="space-y-1.5 text-base font-medium text-white">
+                {menu.dinner.items.map((item, idx) => (
+                  <li key={idx} className="flex items-center space-x-2.5">
+                    <span className="text-[#7986CB] text-xl leading-none">•</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
       )}

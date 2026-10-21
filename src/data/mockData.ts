@@ -1,180 +1,175 @@
 import { DailyMenu, LockStatus, NotificationItem, StudentUser } from '../types';
 import { formatDateKey } from '../utils/rules';
 
-// Standard 7-day cyclical hostel mess menu
+// Authentic weekly mess schedule matching native SMYS hostel dishes
 export const WEEKLY_MESS_SCHEDULE: Record<number, Omit<DailyMenu, 'date'>> = {
   0: { // Sunday
     dayName: 'Sunday',
     breakfast: {
-      title: 'Sunday Special Breakfast',
-      timing: '7:30 AM - 9:00 AM',
-      items: ['Masala Dosa with Potato Masala', 'Sambar & Coconut Chutney', 'Boiled Eggs / Banana', 'Filter Coffee / Tea'],
-      special: 'Crispy Butter Roast Special'
+      title: 'Breakfast',
+      timing: '7:30 am to 11:00 am',
+      items: ['ಮಸಾಲಾ ದೋಸೆ + ಚಟ್ನಿ + ಸಾಂಬಾರ್.', 'ಕಾಫಿ / ಟೀ.']
     },
     lunch: {
-      title: 'Grand Sunday Feast',
-      timing: '12:30 PM - 2:00 PM',
-      items: ['Chicken Biryani / Paneer Dum Biryani', 'Onion Cucumber Raita', 'Mirchi Ka Salan', 'Boiled Egg', 'Gulab Jamun (1 pc)'],
-      special: 'Chef Special Biryani Feast'
+      title: 'Lunch',
+      timing: '12:30 to 2:30 pm',
+      items: ['ಸ್ಪೆಷಲ್ ಬಿರಿಯಾನಿ / ಅನ್ನ + ದಾಲ್ + ಪಾಯಸ.', 'ಮೊಸರು.']
     },
     snack: {
-      title: 'Evening Refreshment',
-      timing: '5:00 PM - 6:00 PM',
-      items: ['Samosa with Mint Green Chutney', 'Cardamom Milk Tea / Coffee']
+      title: 'Snacks',
+      timing: '5:00 to 6:00 pm',
+      items: ['ಸಮೋಸಾ + ಚಟ್ನಿ.', 'ಚಹಾ / ಕಾಫಿ.']
     },
     dinner: {
-      title: 'Light Night Dinner',
-      timing: '7:30 PM - 9:00 PM',
-      items: ['Soft Phulkas', 'Dal Tadka', 'Jeera Rice', 'Aloo Gobi Dry', 'Curd']
+      title: 'Dinner',
+      timing: '7:30 to 9:30 pm',
+      items: ['ಚಪಾತಿ + ಪನ್ನೀರ್ ಕುರ್ಮಾ + ಜೀರಾ ರೈಸ್.', 'ಮೊಸರನ್ನ.']
     }
   },
   1: { // Monday
     dayName: 'Monday',
     breakfast: {
-      title: 'South Indian Breakfast',
-      timing: '7:30 AM - 9:00 AM',
-      items: ['Steamed Idli (3 pcs)', 'Medu Vada (1 pc)', 'Drumstick Sambar', 'Tomato & Coconut Chutneys', 'Tea / Coffee']
+      title: 'Breakfast',
+      timing: '7:30 am to 11:00 am',
+      items: ['ಇಡ್ಲಿ + ವಡೆ + ಸಾಂಬಾರ್ + ಚಟ್ನಿ.', 'ಕಾಫಿ / ಟೀ.']
     },
     lunch: {
-      title: 'Executive Lunch',
-      timing: '12:30 PM - 2:00 PM',
-      items: ['Steamed Basmati Rice', 'Chana Masala Gravy', 'Roti / Chapati (2 pcs)', 'Mix Veg Poriyal', 'Rasam', 'Fresh Curd']
+      title: 'Lunch',
+      timing: '12:30 to 2:30 pm',
+      items: ['ಅನ್ನ + ಬೇಳೆ ಸಾರು + ತರಕಾರಿ ಪಲ್ಯ.', 'ಮೊಸರು.']
     },
     snack: {
-      title: 'Evening Refreshment',
-      timing: '5:00 PM - 6:00 PM',
-      items: ['Crispy Onion Pakoda', 'Filter Coffee / Ginger Chai']
+      title: 'Snacks',
+      timing: '5:00 to 6:00 pm',
+      items: ['ಈರುಳ್ಳಿ ಪಕೋಡಾ.', 'ಚಹಾ / ಕಾಫಿ.']
     },
     dinner: {
-      title: 'Nutritious Dinner',
-      timing: '7:30 PM - 9:00 PM',
-      items: ['Hot Chapatis', 'Paneer Butter Masala', 'Veg Fried Rice', 'Dal Fry', 'Pickle & Papad']
+      title: 'Dinner',
+      timing: '7:30 to 9:30 pm',
+      items: ['ಚಪಾತಿ + ದಾಲ್ ಫ್ರೈ + ಅನ್ನ + ರಸಂ.', 'ಮೊಸರು.']
     }
   },
   2: { // Tuesday
     dayName: 'Tuesday',
     breakfast: {
-      title: 'Wholesome Breakfast',
-      timing: '7:30 AM - 9:00 AM',
-      items: ['Puri with Potato Aloo Sagu', 'Kesari Bath / Sheera', 'Sprouts Salad', 'Hot Tea / Milk']
+      title: 'Breakfast',
+      timing: '7:30 am to 11:00 am',
+      items: ['ಪೂರಿ + ಸಾಗು + ಕೇಸರಿ ಬಾತ್.', 'ಕಾಫಿ / ಟೀ.']
     },
     lunch: {
-      title: 'Traditional Lunch',
-      timing: '12:30 PM - 2:00 PM',
-      items: ['White Rice', 'Tomato Rasam', 'Palak Paneer', 'Crispy Appalam', 'Beans Carrot Fry', 'Butter Milk']
+      title: 'Lunch',
+      timing: '12:30 to 2:30 pm',
+      items: ['ಅನ್ನ + ಟೊಮೇಟೊ ರಸಂ + ಪಾಲಕ್ ಪಲ್ಯ.', 'ಮೊಸರು + ಹಪ್ಪಳ.']
     },
     snack: {
-      title: 'Evening Refreshment',
-      timing: '5:00 PM - 6:00 PM',
-      items: ['Veg Cutlet (2 pcs) with Tomato Ketchup', 'Special Masala Chai']
+      title: 'Snacks',
+      timing: '5:00 to 6:00 pm',
+      items: ['ಕಟ್ಲೆಟ್ + ಸಾಸ್.', 'ಚಹಾ / ಕಾಫಿ.']
     },
     dinner: {
-      title: 'Comfort Dinner',
-      timing: '7:30 PM - 9:00 PM',
-      items: ['Methi Paratha with Butter', 'Dal Makhani', 'Steamed Rice', 'Curd Rice with Pomegranate']
+      title: 'Dinner',
+      timing: '7:30 to 9:30 pm',
+      items: ['ರೊಟ್ಟಿ + ಎಣ್ಣೆಗಾಯಿ ಪಲ್ಯ + ಅನ್ನ.', 'ಮೊಸರನ್ನ.']
     }
   },
-  3: { // Wednesday
+  3: { // Wednesday (Matches Screenshot 4)
     dayName: 'Wednesday',
     breakfast: {
-      title: 'Classic Tiffin',
-      timing: '7:30 AM - 9:00 AM',
-      items: ['Ven Pongal with Ghee & Cashews', 'Getti Chutney & Medu Vada', 'Sambar', 'Tea / Coffee']
+      title: 'Breakfast',
+      timing: '7:30 am to 11:00 am',
+      items: ['ಪುಳಿಯೋಗರೆ + ಮೊಸರು.']
     },
     lunch: {
-      title: 'Midweek Special Lunch',
-      timing: '12:30 PM - 2:00 PM',
-      items: ['Chicken Curry / Mushroom Curry', 'White Rice', 'Chapatis (2 pcs)', 'Dal Palak', 'Kootu', 'Payasam']
+      title: 'Lunch',
+      timing: '12:30 to 2:30 pm',
+      items: ['ಅನ್ನ + ಸೌತೆಕಾಯ್ ಹುಳಿ + ಮೊಸರು.']
     },
     snack: {
-      title: 'Evening Refreshment',
-      timing: '5:00 PM - 6:00 PM',
-      items: ['Sweet Corn Chaat / Sundal', 'Lemon Tea / Coffee']
+      title: 'Snacks',
+      timing: '5:00 to 6:00 pm',
+      items: ['ಸ್ವೀಟ್ ಕಾರ್ನ್ / ಸುಂಡಲ್.', 'ಕಾಫಿ / ಟೀ.']
     },
     dinner: {
-      title: 'Dinner Spread',
-      timing: '7:30 PM - 9:00 PM',
-      items: ['Egg Curry / Kadai Paneer', 'Soft Phulkas', 'Ghee Rice', 'Dal Tadka', 'Salad']
+      title: 'Dinner',
+      timing: '7:30 to 9:30 pm',
+      items: ['ಚಪಾತಿ + ಮಿಕ್ಸ್ ವೆಜ್ ಕುರ್ಮಾ + ಅನ್ನ.', 'ಮೊಸರನ್ನ.']
     }
   },
   4: { // Thursday
     dayName: 'Thursday',
     breakfast: {
-      title: 'Light Morning Tiffin',
-      timing: '7:30 AM - 9:00 AM',
-      items: ['Rava Upma with Mixed Veggies', 'Coconut Chutney', 'Banana', 'Coffee / Tea']
+      title: 'Breakfast',
+      timing: '7:30 am to 11:00 am',
+      items: ['ಉಪ್ಪಿಟ್ಟು + ತೆಂಗಿನಕಾಯಿ ಚಟ್ನಿ.', 'ಕಾಫಿ / ಟೀ.']
     },
     lunch: {
-      title: 'Homestyle Lunch',
-      timing: '12:30 PM - 2:00 PM',
-      items: ['Lemon Rice / Steamed Rice', 'Sambar', 'Aloo Fry', 'Cabbage Thoran', 'Rasam', 'Fresh Curd']
+      title: 'Lunch',
+      timing: '12:30 to 2:30 pm',
+      items: ['ಅನ್ನ + ಮೈಸೂರು ಸಾಂಬಾರ್ + ಆಲೂ ಫ್ರೈ.', 'ಮೊಸರು.']
     },
     snack: {
-      title: 'Evening Refreshment',
-      timing: '5:00 PM - 6:00 PM',
-      items: ['Pani Puri / Masala Puri (Hostel Counter)', 'Hot Tea / Coffee']
+      title: 'Snacks',
+      timing: '5:00 to 6:00 pm',
+      items: ['ಪಾನಿಪುರಿ / ಮಸಾಲಪುರಿ.', 'ಚಹಾ.']
     },
     dinner: {
-      title: 'Delight Dinner',
-      timing: '7:30 PM - 9:00 PM',
-      items: ['Malabar Parotta / Chapati', 'Veg Kurma / Soya Chunk Curry', 'Curd Rice', 'Pickle']
+      title: 'Dinner',
+      timing: '7:30 to 9:30 pm',
+      items: ['ಪರೋಟ + ಚನ್ನಾ ಮಸಾಲಾ + ಅನ್ನ.', 'ಮೊಸರನ್ನ.']
     }
   },
   5: { // Friday
     dayName: 'Friday',
     breakfast: {
-      title: 'Crispy Dosa Morning',
-      timing: '7:30 AM - 9:00 AM',
-      items: ['Set Dosa (3 pcs) with Butter', 'Vegetable Sagu & Chutney', 'Tea / Coffee']
+      title: 'Breakfast',
+      timing: '7:30 am to 11:00 am',
+      items: ['ಸೆಟ್ ದೋಸೆ + ಸಾಗು + ಚಟ್ನಿ.', 'ಕಾಫಿ / ಟೀ.']
     },
     lunch: {
-      title: 'Friday Feast',
-      timing: '12:30 PM - 2:00 PM',
-      items: ['Fish Fry (Optional) / Paneer Tikka', 'Rice', 'Mysore Rasam', 'Dal Fry', 'Mor Kuzhambu', 'Semiya Payasam']
+      title: 'Lunch',
+      timing: '12:30 to 2:30 pm',
+      items: ['ಅನ್ನ + ಬಿಸಿಬೇಳೆ ಬಾತ್ + ಬೂಂದಿ ರಾಯಿತಾ.', 'ಸೇವಿಗೆ ಪಾಯಸ.']
     },
     snack: {
-      title: 'Evening Refreshment',
-      timing: '5:00 PM - 6:00 PM',
-      items: ['Bread Omelette / Veg Cheese Sandwich', 'Cold Coffee / Milk Tea']
+      title: 'Snacks',
+      timing: '5:00 to 6:00 pm',
+      items: ['ವೆಜ್ ಸ್ಯಾಂಡ್‌ವಿಚ್.', 'ಕೋಲ್ಡ್ ಕಾಫಿ / ಚಹಾ.']
     },
     dinner: {
-      title: 'Friday Night Special',
-      timing: '7:30 PM - 9:00 PM',
-      items: ['Egg Fried Rice / Veg Fried Rice', 'Gobi Manchurian Semi-gravy', 'Chapatis', 'Sweet Corn Soup']
+      title: 'Dinner',
+      timing: '7:30 to 9:30 pm',
+      items: ['ಫ್ರೈಡ್ ರೈಸ್ + ಗೋಬಿ ಮಂಚೂರಿಯನ್.', 'ಚಪಾತಿ + ಮೊಸರು.']
     }
   },
   6: { // Saturday
     dayName: 'Saturday',
     breakfast: {
-      title: 'Weekend Kickoff Breakfast',
-      timing: '7:30 AM - 9:00 AM',
-      items: ['Aloo Paratha with Curd & Pickle', 'Poha with Peanuts', 'Fruits Bowl', 'Coffee / Tea']
+      title: 'Breakfast',
+      timing: '7:30 am to 11:00 am',
+      items: ['ಅವಲಕ್ಕಿ ಬಾತ್ (ಪೋಹಾ) + ಮೊಸರು.', 'ಕಾಫಿ / ಟೀ.']
     },
     lunch: {
-      title: 'Weekend Lunch',
-      timing: '12:30 PM - 2:00 PM',
-      items: ['Pulao with Rajma Masala', 'Steamed Rice', 'Mix Veg Raita', 'Papad', 'Sweet Boondi']
+      title: 'Lunch',
+      timing: '12:30 to 2:30 pm',
+      items: ['ಪುಲಾವ್ + ಕುರುಮಾ + ಅನ್ನ + ರಸಂ.', 'ಮೊಸರು.']
     },
     snack: {
-      title: 'Evening Refreshment',
-      timing: '5:00 PM - 6:00 PM',
-      items: ['Bhel Puri / Sev Puri', 'Ginger Tea / Filter Coffee']
+      title: 'Snacks',
+      timing: '5:00 to 6:00 pm',
+      items: ['ಭೇಲ್ ಪುರಿ.', 'ಮಸಾಲಾ ಟೀ.']
     },
     dinner: {
-      title: 'Weekend Dinner',
-      timing: '7:30 PM - 9:00 PM',
-      items: ['Pav Bhaji with Butter Pavs', 'Veg Pulao', 'Gulab Jamun / Ice Cream', 'Fresh Curd']
+      title: 'Dinner',
+      timing: '7:30 to 9:30 pm',
+      items: ['ಪಾವ್ ಬಾಜಿ + ಬಟರ್ ಪಾವ್ + ಪುಲಾವ್.', 'ಮೊಸರು.']
     }
   }
 };
 
-/**
- * Returns daily menu for any given date, falling back to weekly schedule if Firestore has no doc.
- */
 export function getFallbackMenuForDate(date: Date): DailyMenu {
   const dateKey = formatDateKey(date);
   const dayIndex = date.getDay();
-  const template = WEEKLY_MESS_SCHEDULE[dayIndex] || WEEKLY_MESS_SCHEDULE[1];
+  const template = WEEKLY_MESS_SCHEDULE[dayIndex] || WEEKLY_MESS_SCHEDULE[3];
 
   return {
     date: dateKey,
@@ -186,68 +181,31 @@ export function getFallbackMenuForDate(date: Date): DailyMenu {
   };
 }
 
-// Default Lock Status (Master Open, All meals editable initially)
+// Lock Status matching native app screenshot 5:
+// Breakfast Locked, Lunch Locked, Snacks Locked, Dinner Open!
 export const INITIAL_LOCK_STATUS: LockStatus = {
   locked: false,
-  breakfastLocked: false,
-  lunchLocked: false,
-  snackLocked: false,
+  breakfastLocked: true,
+  lunchLocked: true,
+  snackLocked: true,
   dinnerLocked: false
 };
 
-// Demo Student User
+// Default Student User matching native app screenshot 2:
 export const DEMO_STUDENT_USER: StudentUser = {
-  uid: 'smys_std_101',
-  name: 'Rahul Sharma',
-  email: 'rahul.sharma@smys.edu',
+  uid: 'smys_satwik',
+  name: 'SATWIK G JOSHI',
+  email: 'satwik@smys.edu',
   role: 'student',
   year: '3rd Year',
-  rollNumber: '22CS104',
-  adminId: 'SMYS-2024-089',
+  rollNumber: '22CS042',
+  adminId: 'SMYS-2024-042',
   password: 'password123',
-  breakfastPref: true,
-  lunchPref: true,
-  snackPref: true,
+  breakfastPref: false,
+  lunchPref: false,
+  snackPref: false,
   dinnerPref: true,
   isLeave: false
 };
 
-// Default Notifications
-export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: 'notif_1',
-    title: 'Important: Sunday Special Feast Timing',
-    message: 'Mess timings for upcoming Sunday Lunch will strictly follow 12:30 PM to 2:00 PM. Please ensure your food count is submitted before 7:40 PM on Saturday.',
-    timestamp: Date.now() - 1000 * 60 * 45, // 45 mins ago
-    targetYear: 'All',
-    priority: 'HIGH',
-    category: 'TIMING'
-  },
-  {
-    id: 'notif_2',
-    title: '3rd Year Mess Feedback Meeting',
-    message: 'Quarterly student mess council meeting will be held in the hostel dining hall this Thursday at 6:30 PM. All 3rd year room representatives must attend.',
-    timestamp: Date.now() - 1000 * 60 * 180, // 3 hours ago
-    targetYear: '3rd Year',
-    priority: 'NORMAL',
-    category: 'GENERAL'
-  },
-  {
-    id: 'notif_3',
-    title: 'Night Study Snacks Available',
-    message: 'During internal exam week, hot tea and biscuits will be served between 10:30 PM and 11:15 PM at the main mess counter.',
-    timestamp: Date.now() - 1000 * 60 * 60 * 24, // 1 day ago
-    targetYear: 'All',
-    priority: 'NORMAL',
-    category: 'MESS'
-  },
-  {
-    id: 'notif_4',
-    title: 'Leave Count Reminder',
-    message: 'Students leaving for weekend home transit must toggle "On Leave" in the portal before 7:40 PM Friday to avoid food wastage.',
-    timestamp: Date.now() - 1000 * 60 * 60 * 36,
-    targetYear: 'All',
-    priority: 'HIGH',
-    category: 'LEAVE'
-  }
-];
+export const INITIAL_NOTIFICATIONS: NotificationItem[] = [];
