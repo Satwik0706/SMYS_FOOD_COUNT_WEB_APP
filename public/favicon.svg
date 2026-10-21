@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFB74D"/>
+      <stop offset="100%" stop-color="#FF9800"/>
+    </linearGradient>
+    <linearGradient id="innerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#FFF3E0"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#E65100" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <!-- Background Rounded Shield -->
+  <rect x="6" y="6" width="88" height="88" rx="24" fill="url(#primaryGrad)" filter="url(#shadow)"/>
+  
+  <!-- Food Cloche Dome Motif -->
+  <!-- Base Plate -->
+  <path d="M24 70 C24 67, 76 67, 76 70 C76 73, 24 73, 24 70 Z" fill="#FFFFFF"/>
+  <rect x="22" y="70" width="56" height="4" rx="2" fill="#FFFFFF"/>
+  
+  <!-- Cloche Dome -->
+  <path d="M26 66 C26 38, 74 38, 74 66 Z" fill="url(#innerGrad)"/>
+  <!-- Handle Knob -->
+  <circle cx="50" cy="36" r="5" fill="#FFFFFF"/>
+  <rect x="48" y="39" width="4" height="4" fill="#FFFFFF"/>
+  
+  <!-- SMYS Badge text/accent -->
+  <path d="M42 54 Q50 48 58 54" stroke="#FF9800" stroke-width="3" stroke-linecap="round" fill="none"/>
+</svg>

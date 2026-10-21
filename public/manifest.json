@@ -1,0 +1,18 @@
+{
+  "name": "SMYS Food Count — Student Portal",
+  "short_name": "SMYS Portal",
+  "description": "SMYS Hostel Student Food Count & Daily Mess Menu Portal",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFF3E0",
+  "theme_color": "#FF9800",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

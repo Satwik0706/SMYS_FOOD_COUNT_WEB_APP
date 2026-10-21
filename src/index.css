@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-orange: #FF9800;
+  --color-bg-gradient-top: #FFF3E0;
+  --color-lunch-green: #4CAF50;
+  --color-snack-purple: #9C27B0;
+  --color-dinner-blue: #2196F3;
+  --color-leave-red: #F44336;
+  --color-card-surface: #FFFFFF;
+  --color-dark-surface: #1E1A16;
+  --font-sans: 'Outfit', 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+:root {
+  --primary-orange: #FF9800;
+  --bg-gradient-top: #FFF3E0;
+  --lunch-green: #4CAF50;
+  --snack-purple: #9C27B0;
+  --dinner-blue: #2196F3;
+  --leave-red: #F44336;
+  --card-surface: #FFFFFF;
+  --dark-surface: #1E1A16;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  font-family: var(--font-sans);
+  background-color: #F8FAFC;
+  color: #1E293B;
+  overscroll-behavior-y: none;
+}
+
+/* Glassmorphism helpers */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.glass-nav {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+
+/* Pulsing subtle rings */
+@keyframes pulseSubtle {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+.animate-pulse-subtle {
+  animation: pulseSubtle 3s infinite ease-in-out;
+}
