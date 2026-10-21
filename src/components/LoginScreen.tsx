@@ -104,17 +104,6 @@ export const LoginScreen: React.FC = () => {
               {loading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
-
-          {/* Quick Demo Access */}
-          <div className="mt-4 pt-3 border-t border-[#232528] text-center">
-            <button
-              type="button"
-              onClick={handleQuickDemo}
-              className="text-xs text-[#AAAAAA] hover:text-[#FF5722] transition-colors"
-            >
-              Click here to sign in as <strong>SATWIK G JOSHI</strong>
-            </button>
-          </div>
         </div>
 
         {/* Links below card */}

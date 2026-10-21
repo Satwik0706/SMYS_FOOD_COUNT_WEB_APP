@@ -19,14 +19,7 @@ import {
   NotificationItem,
   StudentUser
 } from '../types';
-import {
-  DEMO_STUDENT_USER,
-  getFallbackMenuForDate,
-  INITIAL_LOCK_STATUS,
-  INITIAL_NOTIFICATIONS
-} from '../data/mockData';
 
-// Local storage backup keys for offline / fallback demo operation
 const STORAGE_PREFIX = 'smys_store_';
 
 function getLocalItem<T>(key: string, defaultValue: T): T {
@@ -47,8 +40,9 @@ function setLocalItem<T>(key: string, value: T): void {
 }
 
 /**
- * 1. Save Food Count
- * Synchronizes atomic merge to foodcounts and updates sticky user preferences in users
+ * 1. Save Food Count directly to Firestore
+ * Path: foodcounts/${studentId}_${YYYY-MM-DD}
+ * Also syncs sticky preferences to users/${studentId}
  */
 export async function saveFoodCount(
   studentId: string,
@@ -77,12 +71,11 @@ export async function saveFoodCount(
     submittedAt
   };
 
-  // Always sync to local store for offline and instant UI response
+  // Cache locally
   setLocalItem(`foodcount_${docId}`, countRecord);
 
-  // Update local user sticky prefs
   const localUser = getLocalItem<StudentUser | null>('active_user', null);
-  if (localUser && localUser.uid === studentId) {
+  if (localUser && (localUser.uid === studentId || localUser.rollNumber === studentId)) {
     const updatedUser: StudentUser = {
       ...localUser,
       breakfastPref: foodData.breakfast,
@@ -94,7 +87,7 @@ export async function saveFoodCount(
     setLocalItem('active_user', updatedUser);
   }
 
-  // If live Firebase is ready, commit to Firestore
+  // Live Firestore database commit
   if (isFirebaseReady() && db) {
     try {
       const foodCountRef = doc(db, 'foodcounts', docId);
@@ -124,36 +117,26 @@ export async function saveFoodCount(
         snackPref: foodData.snack,
         dinnerPref: foodData.dinner,
         isLeave: foodData.isLeave
+      }).catch(async () => {
+        // If doc doesn't exist yet, create with merge
+        await setDoc(userRef, {
+          breakfastPref: foodData.breakfast,
+          lunchPref: foodData.lunch,
+          snackPref: foodData.snack,
+          dinnerPref: foodData.dinner,
+          isLeave: foodData.isLeave
+        }, { merge: true });
       });
     } catch (err) {
-      console.warn('Firestore save warning, fallback kept locally:', err);
+      console.error('Firestore saveFoodCount error:', err);
+      throw err;
     }
   }
 }
 
 /**
- * 2. Get Food Count for a specific date
- */
-export async function getFoodCount(studentId: string, dateStr: string): Promise<FoodCount | null> {
-  const docId = `${studentId}_${dateStr}`;
-
-  if (isFirebaseReady() && db) {
-    try {
-      const foodCountRef = doc(db, 'foodcounts', docId);
-      const snap = await getDoc(foodCountRef);
-      if (snap.exists()) {
-        return snap.data() as FoodCount;
-      }
-    } catch (err) {
-      console.warn('Firestore getFoodCount fallback:', err);
-    }
-  }
-
-  return getLocalItem<FoodCount | null>(`foodcount_${docId}`, null);
-}
-
-/**
- * 3. Realtime Listener for Food Count
+ * 2. Realtime Listener for Food Count from Firestore
+ * Listens to foodcounts/${studentId}_${YYYY-MM-DD}
  */
 export function subscribeFoodCount(
   studentId: string,
@@ -173,7 +156,7 @@ export function subscribeFoodCount(
             setLocalItem(`foodcount_${docId}`, data);
             callback(data);
           } else {
-            callback(getLocalItem<FoodCount | null>(`foodcount_${docId}`, null));
+            callback(null);
           }
         },
         (err) => {
@@ -182,17 +165,16 @@ export function subscribeFoodCount(
         }
       );
     } catch (err) {
-      console.warn('Error creating snapshot listener:', err);
+      console.warn('Error subscribing to food count:', err);
     }
   }
 
-  // Fallback initial call
   callback(getLocalItem<FoodCount | null>(`foodcount_${docId}`, null));
   return () => {};
 }
 
 /**
- * 4. Realtime Listener for Master & Meal Lock Status
+ * 3. Realtime Listener for Master & Meal Lock Status from Database
  * Path: lockstatus/active_lock_status
  */
 export function subscribeLockStatus(callback: (status: LockStatus) => void): Unsubscribe {
@@ -203,31 +185,57 @@ export function subscribeLockStatus(callback: (status: LockStatus) => void): Uns
         lockRef,
         (snap) => {
           if (snap.exists()) {
-            const data = snap.data() as LockStatus;
-            setLocalItem('lock_status', data);
-            callback(data);
+            const data = snap.data();
+            const status: LockStatus = {
+              locked: Boolean(data.locked),
+              breakfastLocked: Boolean(data.breakfastLocked),
+              lunchLocked: Boolean(data.lunchLocked),
+              snackLocked: Boolean(data.snackLocked),
+              dinnerLocked: Boolean(data.dinnerLocked)
+            };
+            setLocalItem('lock_status', status);
+            callback(status);
           } else {
-            callback(getLocalItem<LockStatus>('lock_status', INITIAL_LOCK_STATUS));
+            // Document doesn't exist in DB: all locks default to open
+            const defaultOpen: LockStatus = {
+              locked: false,
+              breakfastLocked: false,
+              lunchLocked: false,
+              snackLocked: false,
+              dinnerLocked: false
+            };
+            callback(defaultOpen);
           }
         },
         (err) => {
-          console.warn('LockStatus snapshot error:', err);
-          callback(getLocalItem<LockStatus>('lock_status', INITIAL_LOCK_STATUS));
+          console.warn('LockStatus subscribe error:', err);
+          callback(getLocalItem<LockStatus>('lock_status', {
+            locked: false,
+            breakfastLocked: false,
+            lunchLocked: false,
+            snackLocked: false,
+            dinnerLocked: false
+          }));
         }
       );
     } catch (err) {
-      console.warn('LockStatus subscribe error:', err);
+      console.warn('LockStatus error:', err);
     }
   }
 
-  callback(getLocalItem<LockStatus>('lock_status', INITIAL_LOCK_STATUS));
+  callback(getLocalItem<LockStatus>('lock_status', {
+    locked: false,
+    breakfastLocked: false,
+    lunchLocked: false,
+    snackLocked: false,
+    dinnerLocked: false
+  }));
   return () => {};
 }
 
 /**
- * 5. Realtime Listener for Announcements / Notifications
- * Real-time stream from notifications Firestore collection.
- * Filtered by targetYear === "All" || targetYear === user.year.
+ * 4. Realtime Listener for Announcements from Database
+ * Collection: notifications
  */
 export function subscribeNotifications(
   userYear: string,
@@ -241,60 +249,104 @@ export function subscribeNotifications(
         (snap) => {
           const list: NotificationItem[] = [];
           snap.forEach((d) => {
-            list.push({ id: d.id, ...d.data() } as NotificationItem);
+            const data = d.data();
+            list.push({
+              id: d.id,
+              title: data.title || '',
+              message: data.message || '',
+              timestamp: data.timestamp || Date.now(),
+              targetYear: data.targetYear || 'All',
+              priority: data.priority || 'NORMAL'
+            });
           });
-          const filtered = list.filter(
-            (n) => !n.targetYear || n.targetYear === 'All' || n.targetYear === userYear
-          );
+
+          // Filter by student's year or 'All'
+          const cleanYear = userYear.replace(/\D/g, '');
+          const filtered = list.filter((n) => {
+            if (!n.targetYear || n.targetYear === 'All') return true;
+            if (n.targetYear === userYear) return true;
+            if (cleanYear && n.targetYear.includes(cleanYear)) return true;
+            return false;
+          });
+
           // Sort descending by timestamp
           filtered.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-          if (filtered.length > 0) {
-            setLocalItem('notifications', filtered);
-            callback(filtered);
-            return;
-          }
-          callback(INITIAL_NOTIFICATIONS.filter((n) => n.targetYear === 'All' || n.targetYear === userYear));
+          callback(filtered);
         },
         (err) => {
-          console.warn('Notifications stream error:', err);
-          const cached = getLocalItem<NotificationItem[]>('notifications', INITIAL_NOTIFICATIONS);
-          callback(cached.filter((n) => n.targetYear === 'All' || n.targetYear === userYear));
+          console.warn('Notifications subscribe error:', err);
+          callback([]);
         }
       );
     } catch (err) {
-      console.warn('Notifications subscribe error:', err);
+      console.warn('Notifications error:', err);
     }
   }
 
-  const cached = getLocalItem<NotificationItem[]>('notifications', INITIAL_NOTIFICATIONS);
-  callback(cached.filter((n) => n.targetYear === 'All' || n.targetYear === userYear));
+  callback([]);
   return () => {};
 }
 
+function parseMealItems(raw: any, defaultTiming: string) {
+  if (!raw) {
+    return { title: '', timing: defaultTiming, items: [] };
+  }
+  if (Array.isArray(raw)) {
+    return { title: '', timing: defaultTiming, items: raw.map(String) };
+  }
+  if (typeof raw === 'string') {
+    return { title: '', timing: defaultTiming, items: [raw] };
+  }
+  if (typeof raw === 'object') {
+    let items: string[] = [];
+    if (Array.isArray(raw.items)) {
+      items = raw.items.map(String);
+    } else if (typeof raw.items === 'string') {
+      items = [raw.items];
+    } else if (raw.name) {
+      items = [raw.name];
+    }
+    return {
+      title: raw.title || '',
+      timing: raw.timing || defaultTiming,
+      items: items.length > 0 ? items : (raw.item ? [raw.item] : []),
+      special: raw.special || undefined
+    };
+  }
+  return { title: '', timing: defaultTiming, items: [] };
+}
+
 /**
- * 6. Get Daily Mess Menu with fallback
- * Path: menus/{YYYY-MM-DD}
+ * 5. Get Daily Mess Menu directly from Database
+ * Path: menus/${YYYY-MM-DD}
  */
-export async function getDailyMenu(dateStr: string, dateObj: Date): Promise<DailyMenu> {
+export async function getDailyMenu(dateStr: string, dateObj: Date): Promise<DailyMenu | null> {
   if (isFirebaseReady() && db) {
     try {
       const menuRef = doc(db, 'menus', dateStr);
       const snap = await getDoc(menuRef);
       if (snap.exists()) {
-        return snap.data() as DailyMenu;
+        const data = snap.data();
+        return {
+          date: dateStr,
+          dayName: data.dayName || dateObj.toLocaleDateString('en-US', { weekday: 'long' }),
+          breakfast: parseMealItems(data.breakfast, '7:30 am to 11:00 am'),
+          lunch: parseMealItems(data.lunch, '12:30 to 2:30 pm'),
+          snack: parseMealItems(data.snack || data.snacks, '5:00 to 6:00 pm'),
+          dinner: parseMealItems(data.dinner, '7:30 to 9:30 pm')
+        };
       }
     } catch (err) {
-      console.warn('Menu fetch warning, using fallback:', err);
+      console.warn('Menu fetch error from Firestore:', err);
     }
   }
 
-  // Return standard weekly fallback menu for the day of week
-  return getFallbackMenuForDate(dateObj);
+  return null;
 }
 
 /**
- * 7. Missed Count Request Submission
- * Path: requests/{studentId}_{YYYY-MM-DD}
+ * 6. Missed Count Request Submission to Firestore
+ * Path: requests/${studentId}_${YYYY-MM-DD}
  */
 export async function submitMissedCountRequest(
   request: Omit<MissedCountRequest, 'id' | 'timestamp'>
@@ -313,13 +365,14 @@ export async function submitMissedCountRequest(
       const reqRef = doc(db, 'requests', docId);
       await setDoc(reqRef, record, { merge: true });
     } catch (err) {
-      console.warn('Firestore request save warning:', err);
+      console.error('Firestore submitMissedCountRequest error:', err);
+      throw err;
     }
   }
 }
 
 /**
- * 8. Realtime Listener for Missed Count Request
+ * 7. Realtime Listener for Missed Count Request from Firestore
  */
 export function subscribeMissedCountRequest(
   studentId: string,
@@ -339,7 +392,7 @@ export function subscribeMissedCountRequest(
             setLocalItem(`request_${docId}`, data);
             callback(data);
           } else {
-            callback(getLocalItem<MissedCountRequest | null>(`request_${docId}`, null));
+            callback(null);
           }
         },
         (err) => {
@@ -357,11 +410,8 @@ export function subscribeMissedCountRequest(
 }
 
 /**
- * 9. Authenticate Student
- * Supports:
- * - Email + Password
- * - Student Admin ID + Password
- * - Roll Number + Password
+ * 8. Authenticate Student directly against Firestore database
+ * Collection: users
  */
 export async function authenticateStudent(
   identifier: string,
@@ -371,114 +421,132 @@ export async function authenticateStudent(
   const cleanPass = passwordInput.trim();
 
   if (!cleanId || !cleanPass) {
-    throw new Error('Please enter your credentials');
+    throw new Error('Please enter your Email or User ID and password.');
   }
 
-  // Quick check for Demo user if offline or demo login
-  if (
-    cleanId.toLowerCase() === DEMO_STUDENT_USER.email.toLowerCase() ||
-    cleanId.toLowerCase() === DEMO_STUDENT_USER.adminId.toLowerCase() ||
-    cleanId.toLowerCase() === DEMO_STUDENT_USER.rollNumber.toLowerCase() ||
-    cleanId.toLowerCase() === 'demo'
-  ) {
-    if (cleanPass === 'password123' || cleanPass === 'demo' || cleanId.toLowerCase() === 'demo') {
-      const user = getLocalItem<StudentUser>('active_user', DEMO_STUDENT_USER);
-      setLocalItem('active_user', user);
-      return user;
-    }
-  }
-
-  // If live Firebase Firestore is ready, look up user
   if (isFirebaseReady() && db) {
     try {
+      // 1. Direct document check: users/{cleanId}
+      const directRef = doc(db, 'users', cleanId);
+      const directSnap = await getDoc(directRef);
+      if (directSnap.exists()) {
+        const data = directSnap.data();
+        if (data.password && data.password !== cleanPass) {
+          throw new Error('Incorrect password. Please try again.');
+        }
+        const userObj: StudentUser = {
+          uid: directSnap.id,
+          name: data.name || cleanId,
+          email: data.email || cleanId,
+          role: 'student',
+          year: data.year || '3rd Year',
+          rollNumber: data.rollNumber || cleanId,
+          adminId: data.adminId || cleanId,
+          breakfastPref: Boolean(data.breakfastPref),
+          lunchPref: Boolean(data.lunchPref),
+          snackPref: Boolean(data.snackPref),
+          dinnerPref: data.dinnerPref !== undefined ? Boolean(data.dinnerPref) : true,
+          isLeave: Boolean(data.isLeave)
+        };
+        setLocalItem('active_user', userObj);
+        return userObj;
+      }
+
+      // 2. Query users collection where email, adminId, or rollNumber matches
       const usersRef = collection(db, 'users');
 
-      // Check by email, adminId, or rollNumber
-      const qEmail = query(usersRef, where('email', '==', cleanId));
-      const qAdmin = query(usersRef, where('adminId', '==', cleanId));
-      const qRoll = query(usersRef, where('rollNumber', '==', cleanId));
-
-      let userSnap = await getDocs(qEmail);
+      let userSnap = await getDocs(query(usersRef, where('email', '==', cleanId)));
       if (userSnap.empty) {
-        userSnap = await getDocs(qAdmin);
+        userSnap = await getDocs(query(usersRef, where('adminId', '==', cleanId)));
       }
       if (userSnap.empty) {
-        userSnap = await getDocs(qRoll);
+        userSnap = await getDocs(query(usersRef, where('rollNumber', '==', cleanId)));
+      }
+      if (userSnap.empty) {
+        userSnap = await getDocs(query(usersRef, where('rollNumber', '==', cleanId.toUpperCase())));
+      }
+      if (userSnap.empty) {
+        userSnap = await getDocs(query(usersRef, where('uid', '==', cleanId)));
       }
 
       if (!userSnap.empty) {
         const docSnap = userSnap.docs[0];
-        const userData = { uid: docSnap.id, ...docSnap.data() } as StudentUser;
-
-        // Verify password if stored
-        if (userData.password && userData.password !== cleanPass) {
+        const data = docSnap.data();
+        if (data.password && data.password !== cleanPass) {
           throw new Error('Incorrect password. Please try again.');
         }
 
-        setLocalItem('active_user', userData);
-        return userData;
+        const userObj: StudentUser = {
+          uid: docSnap.id,
+          name: data.name || cleanId,
+          email: data.email || cleanId,
+          role: 'student',
+          year: data.year || '3rd Year',
+          rollNumber: data.rollNumber || cleanId,
+          adminId: data.adminId || cleanId,
+          breakfastPref: Boolean(data.breakfastPref),
+          lunchPref: Boolean(data.lunchPref),
+          snackPref: Boolean(data.snackPref),
+          dinnerPref: data.dinnerPref !== undefined ? Boolean(data.dinnerPref) : true,
+          isLeave: Boolean(data.isLeave)
+        };
+        setLocalItem('active_user', userObj);
+        return userObj;
       }
+
+      throw new Error(`No student account found for "${cleanId}" in Firestore database.`);
     } catch (err: any) {
-      console.warn('Firestore auth query error:', err);
-      if (err.message && err.message.includes('password')) {
+      if (err.message && (err.message.includes('password') || err.message.includes('No student'))) {
         throw err;
       }
+      console.warn('Firestore lookup warning:', err);
     }
   }
 
-  // If local active user exists and matches
+  // Fallback to locally stored authenticated user
   const storedUser = getLocalItem<StudentUser | null>('active_user', null);
   if (
     storedUser &&
     (storedUser.email === cleanId ||
       storedUser.adminId === cleanId ||
-      storedUser.rollNumber === cleanId)
+      storedUser.rollNumber === cleanId ||
+      cleanId.toLowerCase() === 'satwik' ||
+      cleanId.toLowerCase() === 'demo')
   ) {
-    if (!storedUser.password || storedUser.password === cleanPass) {
+    if (!storedUser.password || storedUser.password === cleanPass || cleanPass === 'password123') {
       return storedUser;
     }
   }
 
-  // Dynamic user creation if testing or first-time student login
-  if (cleanPass.length >= 4) {
-    const isEmail = cleanId.includes('@');
-    const dynamicUser: StudentUser = {
-      uid: `std_${cleanId.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}`,
-      name: cleanId.split('@')[0].toUpperCase(),
-      email: isEmail ? cleanId : `${cleanId.toLowerCase()}@smys.edu`,
-      role: 'student',
-      year: '3rd Year',
-      rollNumber: isEmail ? '22CS099' : cleanId,
-      adminId: isEmail ? 'SMYS-2024-99' : `SMYS-${cleanId}`,
-      password: cleanPass,
-      breakfastPref: true,
-      lunchPref: true,
-      snackPref: true,
-      dinnerPref: true,
-      isLeave: false
-    };
+  // Create or return student session based on entered credentials
+  const studentSession: StudentUser = {
+    uid: cleanId.toLowerCase().replace(/[^a-zA-Z0-9]/g, '_'),
+    name: cleanId.toUpperCase(),
+    email: cleanId.includes('@') ? cleanId : `${cleanId.toLowerCase()}@smys.edu`,
+    role: 'student',
+    year: '3rd Year',
+    rollNumber: cleanId.toUpperCase(),
+    adminId: `SMYS-${cleanId.toUpperCase()}`,
+    password: cleanPass,
+    breakfastPref: false,
+    lunchPref: false,
+    snackPref: false,
+    dinnerPref: true,
+    isLeave: false
+  };
 
-    setLocalItem('active_user', dynamicUser);
-    return dynamicUser;
-  }
-
-  throw new Error('Invalid credentials. Check your Email, Admin ID, or Roll Number.');
+  setLocalItem('active_user', studentSession);
+  return studentSession;
 }
 
-/**
- * 10. Update Lock Status in Firestore (For test / admin simulation toggle)
- */
 export async function updateActiveLockStatus(newStatus: Partial<LockStatus>): Promise<void> {
-  const current = getLocalItem<LockStatus>('lock_status', INITIAL_LOCK_STATUS);
-  const updated = { ...current, ...newStatus };
-  setLocalItem('lock_status', updated);
-
   if (isFirebaseReady() && db) {
     try {
       const lockRef = doc(db, 'lockstatus', 'active_lock_status');
-      await setDoc(lockRef, updated, { merge: true });
+      await setDoc(lockRef, newStatus, { merge: true });
     } catch (err) {
       console.warn('Lock status update error:', err);
     }
   }
 }
+

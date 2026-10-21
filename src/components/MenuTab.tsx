@@ -95,9 +95,15 @@ export const MenuTab: React.FC = () => {
         </button>
       </div>
 
-      {loading || !menu ? (
+      {loading ? (
         <div className="py-20 text-center text-[#777777] text-xs">
           Loading mess menu...
+        </div>
+      ) : !menu ? (
+        <div className="rounded-2xl bg-[#1F1F21] p-10 text-center border border-[#2B2B2E] my-6">
+          <p className="text-sm text-[#9E9E9E]">
+            No menu posted for this date.
+          </p>
         </div>
       ) : (
         <div className="space-y-4">
