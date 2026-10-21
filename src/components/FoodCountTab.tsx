@@ -92,8 +92,13 @@ export const FoodCountTab: React.FC = () => {
       if (!nextBreakfast) nextLunchBox = false;
     } else if (mealKey === 'lunchBox') {
       nextLunchBox = !lunchBox;
-      if (nextLunchBox) nextLunch = true;
+      if (nextLunchBox) {
+        nextLunch = true; // Lunch Box automatically covers Lunch
+      }
     } else if (mealKey === 'lunch') {
+      if (lunchBox) {
+        return; // Lunch cannot be toggled when Lunch Box is marked!
+      }
       nextLunch = !lunch;
     } else if (mealKey === 'snack') {
       nextSnack = !snack;
@@ -264,7 +269,11 @@ export const FoodCountTab: React.FC = () => {
                 Lunch
               </h4>
               <p className="text-xs text-[#888888] mt-0.5">
-                {lockStatus.lunchLocked ? 'Locked by Admin' : '12:30 to 2:30 pm'}
+                {lunchBox
+                  ? 'Covered by Lunch Box'
+                  : lockStatus.lunchLocked
+                  ? 'Locked by Admin'
+                  : '12:30 to 2:30 pm'}
               </p>
             </div>
           </div>
@@ -272,20 +281,28 @@ export const FoodCountTab: React.FC = () => {
           {/* Switch Toggle */}
           <button
             type="button"
-            disabled={!evalLocks.canEditLunch}
-            onClick={() => handleToggle('lunch')}
-            className={`relative inline-flex h-7 w-12 shrink-0 rounded-full transition-colors duration-200 ease-in-out cursor-pointer ${
-              lunch && !isLeave ? 'bg-[#FF5722]' : 'bg-[#2A2D33]'
-            } ${!evalLocks.canEditLunch ? 'cursor-not-allowed opacity-80' : ''}`}
+            disabled={!evalLocks.canEditLunch || lunchBox}
+            onClick={() => {
+              if (!lunchBox && evalLocks.canEditLunch) {
+                handleToggle('lunch');
+              }
+            }}
+            className={`relative inline-flex h-7 w-12 shrink-0 rounded-full transition-colors duration-200 ease-in-out ${
+              !evalLocks.canEditLunch || lunchBox ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'
+            } ${
+              (lunch || lunchBox) && !isLeave ? 'bg-[#FF5722]' : 'bg-[#2A2D33]'
+            }`}
           >
             <span
               className={`inline-flex items-center justify-center h-5 w-5 my-1 transform rounded-full transition duration-200 ease-in-out ${
-                lunch && !isLeave
+                (lunch || lunchBox) && !isLeave
                   ? 'translate-x-6 bg-white text-[#FF5722]'
                   : 'translate-x-1 bg-[#4A4E57] text-white'
               }`}
             >
-              {!evalLocks.canEditLunch ? (
+              {lunchBox ? (
+                <Lock className="w-3 h-3 text-[#FF5722]" />
+              ) : !evalLocks.canEditLunch ? (
                 <Lock className="w-3 h-3 text-[#2A2D33]" />
               ) : lunch ? (
                 <Check className="w-3 h-3 stroke-[3]" />
