@@ -292,24 +292,28 @@ function parseMealItems(raw: any, defaultTiming: string) {
     return { title: '', timing: defaultTiming, items: [] };
   }
   if (Array.isArray(raw)) {
-    return { title: '', timing: defaultTiming, items: raw.map(String) };
+    const flattened = raw.flatMap((i) => typeof i === 'string' ? i.split('\n') : [String(i)]);
+    return { title: '', timing: defaultTiming, items: flattened.filter(Boolean) };
   }
   if (typeof raw === 'string') {
-    return { title: '', timing: defaultTiming, items: [raw] };
+    const items = raw.split('\n').map((s) => s.trim()).filter(Boolean);
+    return { title: '', timing: defaultTiming, items: items.length > 0 ? items : [raw] };
   }
   if (typeof raw === 'object') {
     let items: string[] = [];
     if (Array.isArray(raw.items)) {
-      items = raw.items.map(String);
+      items = raw.items.flatMap((i: any) => typeof i === 'string' ? i.split('\n') : [String(i)]);
     } else if (typeof raw.items === 'string') {
-      items = [raw.items];
+      items = raw.items.split('\n').map((s: string) => s.trim()).filter(Boolean);
     } else if (raw.name) {
       items = [raw.name];
+    } else if (raw.item) {
+      items = [raw.item];
     }
     return {
       title: raw.title || '',
-      timing: raw.timing || defaultTiming,
-      items: items.length > 0 ? items : (raw.item ? [raw.item] : []),
+      timing: raw.timing || raw.time || defaultTiming,
+      items: items.length > 0 ? items : [],
       special: raw.special || undefined
     };
   }
@@ -317,31 +321,56 @@ function parseMealItems(raw: any, defaultTiming: string) {
 }
 
 /**
- * 5. Get Daily Mess Menu directly from Database
- * Path: menus/${YYYY-MM-DD}
+ * 5. Get Daily Mess Menu directly from Database (with fallback)
+ * Checks:
+ * - menus/${YYYY-MM-DD}
+ * - menu/${YYYY-MM-DD}
+ * - menus/${weekday}
+ * - menu/${weekday}
+ * Fallback to weekly schedule if not posted in Firestore
  */
-export async function getDailyMenu(dateStr: string, dateObj: Date): Promise<DailyMenu | null> {
+export async function getDailyMenu(dateStr: string, dateObj: Date): Promise<DailyMenu> {
+  const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+  const dayKey = dayName.toLowerCase();
+
   if (isFirebaseReady() && db) {
     try {
-      const menuRef = doc(db, 'menus', dateStr);
-      const snap = await getDoc(menuRef);
-      if (snap.exists()) {
-        const data = snap.data();
-        return {
-          date: dateStr,
-          dayName: data.dayName || dateObj.toLocaleDateString('en-US', { weekday: 'long' }),
-          breakfast: parseMealItems(data.breakfast, '7:30 am to 11:00 am'),
-          lunch: parseMealItems(data.lunch, '12:30 to 2:30 pm'),
-          snack: parseMealItems(data.snack || data.snacks, '5:00 to 6:00 pm'),
-          dinner: parseMealItems(data.dinner, '7:30 to 9:30 pm')
-        };
+      // Check collection options: menus, menu, mess_menu
+      const docCandidates = [
+        doc(db, 'menus', dateStr),
+        doc(db, 'menu', dateStr),
+        doc(db, 'mess_menu', dateStr),
+        doc(db, 'menus', dayKey),
+        doc(db, 'menu', dayKey)
+      ];
+
+      for (const ref of docCandidates) {
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          const data = snap.data();
+          const bfRaw = data.breakfast || data.breakfastItems || data.breakfast_menu || data.bf;
+          const lunchRaw = data.lunch || data.lunchItems || data.lunch_menu;
+          const snackRaw = data.snack || data.snacks || data.snackItems || data.snacks_menu;
+          const dinnerRaw = data.dinner || data.dinnerItems || data.dinner_menu;
+
+          return {
+            date: dateStr,
+            dayName: data.dayName || dayName,
+            breakfast: parseMealItems(bfRaw, data.breakfastTiming || data.breakfastTime || '7:30 am to 11:00 am'),
+            lunch: parseMealItems(lunchRaw, data.lunchTiming || data.lunchTime || '12:30 to 2:30 pm'),
+            snack: parseMealItems(snackRaw, data.snackTiming || data.snackTime || '5:00 to 6:00 pm'),
+            dinner: parseMealItems(dinnerRaw, data.dinnerTiming || data.dinnerTime || '7:30 to 9:30 pm')
+          };
+        }
       }
     } catch (err) {
-      console.warn('Menu fetch error from Firestore:', err);
+      console.warn('Menu fetch error from Firestore, using fallback:', err);
     }
   }
 
-  return null;
+  // Fallback to standard weekly schedule for that day of week
+  const { getFallbackMenuForDate } = await import('../data/mockData');
+  return getFallbackMenuForDate(dateObj);
 }
 
 /**
